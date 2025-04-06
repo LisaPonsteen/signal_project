@@ -27,7 +27,11 @@ import java.util.ArrayList;
 
 /**
  *  A simulator for health data
- *  It creates a list of patients with ID's and health specifics, simulates changing patient data and alerts
+ *  It creates a list of patients with ID's and health specifics
+ *  It simulates constantly changing patient data and alerts
+ *
+ *  <p> To use it, run the main method
+ *  Optionally pass in command-line arguments to specify the number of patients and how the data should be outputted
  */
 public class HealthDataSimulator {
 
@@ -146,7 +150,7 @@ public class HealthDataSimulator {
      * Gives every patient a unique patient id
      *
      * @param patientCount  The amount of patients
-     * @return  A list with patientIds
+     * @return  A list with patientIds as integers
      */
     private static List<Integer> initializePatientIds(int patientCount) {
         List<Integer> patientIds = new ArrayList<>();
@@ -158,7 +162,7 @@ public class HealthDataSimulator {
 
     /**
      * Generates data for each patient
-     * For each patient, it schedules tasks to let the generators generate data
+     * For each patient, it schedules tasks to let the generators generate data, and regenerate it after a certain period of time
      *
      * @param patientIds    List with patientIds of each patient
      */
@@ -179,11 +183,11 @@ public class HealthDataSimulator {
     }
 
     /**
-     * Puts a task into a scheduler, so all task get done at the right time
+     * Puts a task into a scheduler, so it will get done repeatedly at their intended time
      *
      * @param task  Task that has to be executed
-     * @param period    Period in which it has to be executed
-     * @param timeUnit  The time it takes to execute
+     * @param period    Period after which the task has to be executed again
+     * @param timeUnit  The time unit of the period
      */
     private static void scheduleTask(Runnable task, long period, TimeUnit timeUnit) {
         scheduler.scheduleAtFixedRate(task, random.nextInt(5), period, timeUnit);

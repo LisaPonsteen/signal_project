@@ -39,7 +39,7 @@ public class TcpOutputStrategy implements OutputStrategy {
     }
 
     /**
-     *  Outputs data for a single patient, by sending the data to the client
+     *  Outputs data of a single patient, by sending the data to the client
      *
      * @param patientId ID of the patient
      * @param timestamp Timestamp at which the data was generated

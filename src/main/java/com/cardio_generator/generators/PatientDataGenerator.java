@@ -4,7 +4,7 @@ import com.cardio_generator.outputs.OutputStrategy;
 
 /**
  * Interface for data generators.
- * Data generators generate health data for patients and send it out
+ * Data generators generate health data for patients
  */
 public interface PatientDataGenerator {
 

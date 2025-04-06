@@ -7,7 +7,7 @@ package com.cardio_generator.outputs;
 public interface OutputStrategy {
 
     /**
-     *  Outputs data for a single patient
+     *  Outputs data of a single patient
      *
      * @param patientId ID of the patient
      * @param timestamp Timestamp at which the data was generated
