@@ -27,6 +27,11 @@ public class FileReader implements DataReader {
         File dir = new File(outputDir);
         File[] files = dir.listFiles();
 
+        if (files == null || files.length == 0) {
+            System.out.println("No files in directory");
+            return;
+        }
+
         for (File file : files) {
             Scanner scanner = new Scanner(file);
 
@@ -40,7 +45,7 @@ public class FileReader implements DataReader {
 
 
     /**
-     * parses the lines to variable values, and puts it into the data storage
+     * parses the lines to variable values, and puts it into data storage
      *
      * @param line  a line from the file
      * @param dataStorage   data storage where the data should be added to
@@ -54,52 +59,58 @@ public class FileReader implements DataReader {
         long timestamp = -1;
 
         line = line.trim();
-        Scanner lineScanner = new Scanner(line);
+        line = line.replaceAll("\\s+", ""); //remove all whitespace
+        line = line + ","; //put a , to the end of the line, so a , is always the end of a label-value pair
 
-            String label = "";
-            String value = "";
-            boolean readValue = false;
-            boolean triggered = false;
+        String label = "";
+        String value = "";
+        boolean readValue = false;
+        //System.out.println(line);
 
-            while (lineScanner.hasNext()) {
-                String nextChar = lineScanner.next();
-                if (readValue)
-                    value += nextChar;
-                else
-                    label += nextChar;
-                if (nextChar.equals(":")) {
+            for (char nextChar: line.toCharArray()) {
+                if (nextChar == ':') {
                     readValue = true;
-                } else if (nextChar.equals(",")) {
-                    switch (label) {
-                        case "PatientID:":
-                            patientId = Integer.parseInt(value);
-                        case ",Timestamp:":
-                            timestamp = Long.parseLong(value);
-                        case ",Label:":
+                    //System.out.println(label);
+                } else if (nextChar == ',') { //so at the end of value and type pair:
+                    if (label.equals("PatientID"))
+                        patientId = Integer.parseInt(value);
+                    else if (label.equals("Timestamp"))
+                            timestamp = Long.parseLong(value.replace("L", "")); //replace L suffix that (often there to let java know it is type long, but invalid for parsing)
+                    else if (label.equals("Label"))
                             recordType = value;
-                        case ",Data:":
-                            if (recordType.equals("alert")) {
-                                if (value.equals("triggered")) {
-                                    measurementValue = 0.0;
-                                    //if the alert is resolved, measurementValue wil be NaN and the alert won't be pushed
-                                }
+                    else if (label.equals("Data")) {
+                        //System.out.println("in data loop");
+                        if (recordType.equals("alert")) {
+                            if (value.equals("triggered")) {
+                                measurementValue = 0.0;
+                                //if the alert is resolved, measurementValue wil be NaN and the alert won't be pushed
                             } else {
-                                measurementValue = Double.parseDouble(value);
+                                return;
                             }
-                        default:
-                            System.out.println("Unknown data variable" + label);
-                    }
+                        } else {
+                            measurementValue = Double.parseDouble(value);
+                        }
+                    } else
+                        System.out.println("Unknown data variable" + label);
+
                     label = "";
                     value = "";
                     readValue = false;
-                }
-            lineScanner.close();
-        }
+                } else if (readValue)
+                    value += nextChar;
+                else
+                    label += nextChar;
+            }
 
-        if ((Double.isNaN(measurementValue)&& !recordType.equals("alert"))|| recordType.equals("none") || patientId <= 0 || timestamp <= 0) {
-            System.out.println("did not find all data correctly");
-        } else {
+        if ((Double.isNaN(measurementValue)&& !recordType.equals("alert")))
+            System.out.println("did not parse measurement value correctly: " + measurementValue);
+        else if (recordType.equals("none"))
+            System.out.println("did not parse record type correctly: " + label);
+        else if (patientId <= 0)
+            System.out.println("did not parse patient ID correctly: " + patientId);
+        else if (timestamp <= 0)
+            System.out.println("did not parse timestamp correctly: " + timestamp);
+        else
             dataStorage.addPatientData(patientId, measurementValue, recordType, timestamp);
-        }
     }
 }

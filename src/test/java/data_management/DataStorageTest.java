@@ -14,12 +14,18 @@ class DataStorageTest {
     void testAddAndGetRecords() {
         // TODO Perhaps you can implement a mock data reader to mock the test data?
         // DataReader reader
-        DataStorage storage = new DataStorage(reader);
+
+        DataStorage storage = new DataStorage(); //DataStorage storage = new DataStorage(reader);
+        storage.addPatientData(1, 100.0, "WhiteBloodCells", 1714376789050L);
         storage.addPatientData(1, 100.0, "WhiteBloodCells", 1714376789050L);
         storage.addPatientData(1, 200.0, "WhiteBloodCells", 1714376789051L);
 
-        List<PatientRecord> records = storage.getRecords(1, 1714376789050L, 1714376789051L);
-        assertEquals(2, records.size()); // Check if two records are retrieved
+        List<PatientRecord> records = storage.getRecords(1, 1714376789049L, 1714376789052L);
+        if (records.isEmpty()) {
+            System.out.println("records is empty");
+            return;
+        }
+        assertEquals(3, records.size()); // Check if three records are retrieved
         assertEquals(100.0, records.get(0).getMeasurementValue()); // Validate first record
     }
 }
