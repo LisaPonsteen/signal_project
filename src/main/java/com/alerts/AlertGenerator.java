@@ -28,6 +28,13 @@ public class AlertGenerator {
         this.dataStorage = dataStorage;
     }
 
+    /**
+     * Evaluates the specified patient's data to determine if any alert conditions
+     * are met. If a condition is met, an alert is triggered via the
+     * {@link #triggerAlert} method.
+     *
+     * @param patientId the patient to evaluate for alert conditions
+     */
     public void evaluateData(int patientId) {
         List<PatientRecord> records = dataStorage.getRecords(patientId, Long.MIN_VALUE, Long.MAX_VALUE);
 
@@ -53,7 +60,7 @@ public class AlertGenerator {
 
             if ("SystolicPressure".equalsIgnoreCase(type)) {
                 if (systolicStrategy.checkAlert(value, time)) {
-                    triggerAlert(bloodPressureFactory.createAlert(String.valueOf(patientId), "Systolic = " + value, time));
+                    triggerAlert(bloodPressureFactory.createAlert(String.valueOf(patientId), "SystolicPressure=" + value, time));
                 }
                 combinedStrategy.setLastSystolicPressure(value);
                 if (combinedStrategy.checkAlert(value, time)) {
@@ -62,17 +69,17 @@ public class AlertGenerator {
 
             } else if ("DiastolicPressure".equalsIgnoreCase(type)) {
                 if (diastolicStrategy.checkAlert(value, time)) {
-                    triggerAlert(bloodPressureFactory.createAlert(String.valueOf(patientId), "Diastolic = " + value, time));
+                    triggerAlert(bloodPressureFactory.createAlert(String.valueOf(patientId), "DiastolicPressure=" + value, time));
                 }
 
             } else if ("ECG".equalsIgnoreCase(type)) {
                 if (ecgStrategy.checkAlert(value, time)) {
-                    triggerAlert(ecgFactory.createAlert(String.valueOf(patientId), "Abnormal ECG = " + value, time));
+                    triggerAlert(ecgFactory.createAlert(String.valueOf(patientId), "ECG=" + value, time));
                 }
 
             } else if ("Saturation".equalsIgnoreCase(type)) {
                 if (saturationStrategy.checkAlert(value, time)) {
-                    triggerAlert(oxygenFactory.createAlert(String.valueOf(patientId), "Saturation = " + value, time));
+                    triggerAlert(oxygenFactory.createAlert(String.valueOf(patientId), "Saturation=" + value, time));
                 }
                 combinedStrategy.setLastSaturation(value);
 
@@ -85,16 +92,9 @@ public class AlertGenerator {
         }
     }
 
-    /**
-     * Evaluates the specified patient's data to determine if any alert conditions
-     * are met. If a condition is met, an alert is triggered via the
-     * {@link #triggerAlert}
-     * method. This method should define the specific conditions under which an
-     * alert
-     * will be triggered.
-     *
-     * @param patientId the patient to evaluate for alert conditions
-     */
+
+
+    /*
     public void evaluateDataOld(int patientId) {
         List<PatientRecord> records = dataStorage.getRecords(patientId, Long.MIN_VALUE, Long.MAX_VALUE);
         long lastTime;
@@ -117,6 +117,7 @@ public class AlertGenerator {
         int ecgPeakThreshold = 30;
         double averageECG = 0;
 
+        //I don't really get what you expect form the condition/descriptions of the alert
         for (PatientRecord record : records) {
             lastTime = record.getTimestamp();
             String recordType = record.getRecordType();
@@ -203,7 +204,7 @@ public class AlertGenerator {
                 if (lastSaturations.peek() - saturation > 5) {
                     triggerAlert(new Alert(String.valueOf(patientId), "Rapid Drop", lastTime));
                 }
-                if (lastTime - lastTimes.peek() > 600000) { //assume time is in miliseconds, since that is in discription of the generator
+                if (lastTime - lastTimes.peek() > 600000) { //assume time is in milliseconds, since that is in description of the generator
                     //update the windows
                     lastTimes.poll();
                     lastSaturations.poll();
@@ -215,6 +216,7 @@ public class AlertGenerator {
             }
         }
     }
+    */
 
     /**
      * Triggers an alert for the monitoring system. This method can be extended to
@@ -226,7 +228,6 @@ public class AlertGenerator {
      */
     private void triggerAlert(Alert alert) {
         // a bit vague how, where can I reach the staff?
-        System.out.println(alert.getCondition() + ". Patient " + alert.getPatientId() + ", timestamp " + alert.getTimestamp());
-        //print more info
+        System.out.println(alert.toString());
     }
 }

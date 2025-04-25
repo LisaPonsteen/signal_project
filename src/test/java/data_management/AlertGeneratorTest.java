@@ -16,7 +16,7 @@ public class AlertGeneratorTest {
 
     @Test
     void testMakeAlert() {
-        DataStorage dataStorage = new DataStorage();
+        DataStorage dataStorage = DataStorage.getInstance();
         long timestamp = System.currentTimeMillis();
 
         dataStorage.addPatientData(1, 90, "Saturation", timestamp);

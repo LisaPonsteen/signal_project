@@ -29,6 +29,7 @@ import java.util.ArrayList;
  *  A simulator for health data
  *  It creates a list of patients with ID's and health specifics
  *  It simulates constantly changing patient data and alerts
+ *  It is implemented as a Singleton class, only one instance is allowed
  *
  *  <p> To use it, run the main method
  *  Optionally pass in command-line arguments to specify the number of patients and how the data should be outputted
@@ -39,6 +40,20 @@ public class HealthDataSimulator {
     private static ScheduledExecutorService scheduler;
     private static OutputStrategy outputStrategy = new ConsoleOutputStrategy(); // Default output strategy
     private static final Random random = new Random();
+    private static HealthDataSimulator INSTANCE;
+
+    private HealthDataSimulator() {
+    }
+
+    /**
+     * Static method that manages the singleton instance
+     * @return the singleton instance
+     */
+    public static HealthDataSimulator getInstance() {
+        if (INSTANCE == null)
+            INSTANCE = new HealthDataSimulator();
+        return INSTANCE;
+    }
 
     /**
      * Main method that starts the simulator

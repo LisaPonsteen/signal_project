@@ -17,7 +17,7 @@ public class FileReaderTest {
     void testReadFileAndParse() throws IOException {
         String outputDir = "/Users/lisa/Documents/semester2dsai/testDir";
         FileReader reader = new FileReader(outputDir);
-        DataStorage storage = new DataStorage();
+        DataStorage storage = DataStorage.getInstance();
 
         File dir = new File(outputDir);
         File testData1 = new File(outputDir + "/data1.txt");

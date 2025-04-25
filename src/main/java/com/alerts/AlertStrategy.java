@@ -8,8 +8,8 @@ public interface AlertStrategy {
 }
 
 class CombinedAlertStrategy implements AlertStrategy {
-    double lastSaturation = 100;
-    double lastSystolicPressure = 100;
+    private double lastSaturation = 100;
+    private double lastSystolicPressure = 100;
 
     public void setLastSaturation(double lastSaturation) {
         this.lastSaturation = lastSaturation;
@@ -37,12 +37,12 @@ class DiabolicBloodPressureStrategy extends SystolicBloodPressureStrategy {
 
 
 class SystolicBloodPressureStrategy implements AlertStrategy {
-    int trend = 0;
-    boolean increase = false;
-    boolean decrease = false;
-    boolean firstRecord = true;
-    double lastPressure;
-    int trendThreshold = 10;
+    private int trend = 0;
+    private boolean increase = false;
+    private boolean decrease = false;
+    private boolean firstRecord = true;
+    private double lastPressure;
+    private final int trendThreshold = 10;
     int upperThreshold;
     int lowerThreshold;
     public SystolicBloodPressureStrategy() {
@@ -86,10 +86,10 @@ class SystolicBloodPressureStrategy implements AlertStrategy {
 }
 
 class ECGStrategy implements AlertStrategy {
-    Queue<Double> lastECGs = new LinkedList<>();
-    int ECGSize = 5;
-    int ecgPeakThreshold = 30;
-    double averageECG = 0;
+    private Queue<Double> lastECGs = new LinkedList<>();
+    private final int ECGSize = 5;
+    private final int ecgPeakThreshold = 30;
+    private double averageECG = 0;
 
     @Override
     public boolean checkAlert(double value, long time) {
@@ -109,16 +109,17 @@ class ECGStrategy implements AlertStrategy {
 }
 
 class SaturationStrategy implements AlertStrategy {
-    Queue<Double> lastSaturations = new LinkedList<>();
-    Queue<Long> lastTimes = new LinkedList<>();
-    long lastTime;
+    private Queue<Double> lastSaturations = new LinkedList<>();
+    private Queue<Long> lastTimes = new LinkedList<>();
+    private long lastTime;
+    private long timeWindow = 600000; //10 minutes. assuming time is in miliseconds, since that is in discription of the generator
 
     @Override
     public boolean checkAlert(double value, long time) {
         lastSaturations.offer(value);
         lastTimes.offer(lastTime);
 
-        if (lastTime - lastTimes.peek() > 600000) { //assume time is in miliseconds, since that is in discription of the generator
+        if (lastTime - lastTimes.peek() > timeWindow) {
             //update the windows
             lastTimes.poll();
             lastSaturations.poll();
