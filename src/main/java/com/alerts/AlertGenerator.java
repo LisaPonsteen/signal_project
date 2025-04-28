@@ -1,11 +1,11 @@
 package com.alerts;
 
+import com.alerts.Decorators.RepeatedAlertDecorator;
 import com.data_management.DataStorage;
 import com.data_management.PatientRecord;
 
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
+import java.util.Stack;
 
 /**
  * The {@code AlertGenerator} class is responsible for monitoring patient data
@@ -15,6 +15,24 @@ import java.util.Queue;
  */
 public class AlertGenerator {
     private final DataStorage dataStorage;
+    // Strategies
+    private final AlertStrategy ecgStrategy = new ECGStrategy();
+    private final AlertStrategy saturationStrategy = new SaturationStrategy();
+    private final CombinedAlertStrategy combinedStrategy = new CombinedAlertStrategy();
+    private final AlertStrategy systolicStrategy = new SystolicBloodPressureStrategy();
+    private final AlertStrategy diastolicStrategy = new DiabolicBloodPressureStrategy();
+
+    // Factories
+    private final AlertFactory bloodPressureFactory = new BloodPressureAlertFactory();
+    private final AlertFactory oxygenFactory = new BloodOxygenAlertFactory();
+    private final AlertFactory ecgFactory = new ECGAlertFactory();
+    private final AlertFactory combinedFactory = new CombinedAlertFactory();
+    private final AlertFactory alertFactory = new AlertFactory();
+
+    //constants
+    private final int repetitionsForTrend = ((SystolicBloodPressureStrategy) systolicStrategy).getRepetitionsForTrend();
+    private final int EcgWindowSize = ((ECGStrategy) ecgStrategy).getECGSize();
+    private final long saturationWindowSize = ((SaturationStrategy) saturationStrategy).getWindowSize();
 
     /**
      * Constructs an {@code AlertGenerator} with a specified {@code DataStorage}.
@@ -36,31 +54,22 @@ public class AlertGenerator {
      * @param patientId the patient to evaluate for alert conditions
      */
     public void evaluateData(int patientId) {
-        List<PatientRecord> records = dataStorage.getRecords(patientId, Long.MIN_VALUE, Long.MAX_VALUE);
+        long evaluateFrom = dataStorage.getPatientScannedTime(patientId);
+        List<PatientRecord> evaluatedRecords = dataStorage.getRecords(patientId, Long.MIN_VALUE, evaluateFrom);
+        prepAlertStrategies(evaluatedRecords);
 
-        // Strategies
-        AlertStrategy ecgStrategy = new ECGStrategy();
-        AlertStrategy systolicStrategy = new SystolicBloodPressureStrategy();
-        AlertStrategy diastolicStrategy = new DiabolicBloodPressureStrategy();
-        AlertStrategy saturationStrategy = new SaturationStrategy();
-        CombinedAlertStrategy combinedStrategy = new CombinedAlertStrategy();
+        List<PatientRecord> records = dataStorage.getRecords(patientId, evaluateFrom, Long.MAX_VALUE);
 
-        // Factories
-        AlertFactory bloodPressureFactory = new BloodPressureAlertFactory();
-        AlertFactory oxygenFactory = new BloodOxygenAlertFactory();
-        AlertFactory ecgFactory = new ECGAlertFactory();
-        AlertFactory combinedFactory = new CombinedAlertFactory();
-        AlertFactory alertFactory = new AlertFactory();
-
-
+        //check all unchecked records of the patient, from old to new.
         for (PatientRecord record : records) {
             long time = record.getTimestamp();
             double value = record.getMeasurementValue();
             String type = record.getRecordType();
+            Alert alert = null;
 
             if ("SystolicPressure".equalsIgnoreCase(type)) {
                 if (systolicStrategy.checkAlert(value, time)) {
-                    triggerAlert(bloodPressureFactory.createAlert(String.valueOf(patientId), "SystolicPressure=" + value, time));
+                    alert = bloodPressureFactory.createAlert(String.valueOf(patientId), "SystolicPressure=" + value, time);
                 }
                 combinedStrategy.setLastSystolicPressure(value);
                 if (combinedStrategy.checkAlert(value, time)) {
@@ -89,8 +98,78 @@ public class AlertGenerator {
             } else {
                 System.out.println("Unknown record type: " + type);
             }
+            if (alert != null) {
+                if (alert instanceof RepeatedAlertDecorator) {
+                    triggerAlert(alert);
+                    //check again and recheck code here
+                }
+            }
+        }
+        dataStorage.setPatientScannedTime(patientId, records.get(records.size()-1).getTimestamp());
+    }
+
+    //method get last of type
+
+    /**
+     * method that gets the latest (already checked) records that are important for some of the strategies to those strategies
+     * without having to iterate through all existing records
+     * this method should be run once before evaluating unchecked records for a patient, to make sure it also gives trend alerts etc for the first unchecked records
+     *
+     * @param evaluatedRecords list of already evaluated records
+     */
+    private void prepAlertStrategies (List<PatientRecord> evaluatedRecords) {
+        Stack<Double> systolicStack = new Stack<>();
+        Stack<Double> diastolicStack = new Stack<>();
+        Stack<Double> ecgStack = new Stack<>();
+        Stack<Double> saturationStack = new Stack<>();
+        Stack<Long> saturationTimes = new Stack<>();
+        long firstSatTime = 0;
+        boolean satWindowFull = false;
+
+        for (int i = evaluatedRecords.size() - 1; i >= 0; i--) {
+            PatientRecord record = evaluatedRecords.get(i);
+
+            if (record.getRecordType().equals("ECG") && ecgStack.size() < EcgWindowSize) {
+                ecgStack.push(record.getMeasurementValue());
+            } else if (record.getRecordType().equals("SystolicPressure") && systolicStack.size() < repetitionsForTrend) {
+                systolicStack.push(record.getMeasurementValue());
+                if (systolicStack.size() == 1)
+                    combinedStrategy.setLastSystolicPressure(systolicStack.peek());
+            } else if (record.getRecordType().equals("DiastolicPressure") && diastolicStack.size() < repetitionsForTrend) {
+                diastolicStack.push(record.getMeasurementValue());
+            } else if (record.getRecordType().equals("Saturation") && !satWindowFull) {
+                if (saturationStack.isEmpty()) {
+                    firstSatTime = record.getTimestamp();
+                    combinedStrategy.setLastSaturation(record.getMeasurementValue());
+                } else if (saturationWindowSize <= firstSatTime -record.getTimestamp()){
+                    satWindowFull = true;
+                }
+                saturationStack.push(record.getMeasurementValue());
+                saturationTimes.push(record.getTimestamp());
+            }
+            if (ecgStack.size() == EcgWindowSize && satWindowFull && systolicStack.size() == repetitionsForTrend && diastolicStack.size() == repetitionsForTrend) {
+                break; // stop early if everything that is needed is collected
+            }
+        }
+        if (saturationTimes.size() != saturationStack.size()) {
+            System.out.println("Saturation times and values size don't match");
+        } else {
+            while (!saturationStack.isEmpty()) {
+                saturationStrategy.checkAlert(saturationStack.pop(), saturationTimes.pop());
+            }
+        }
+        while (!systolicStack.isEmpty()){
+            systolicStrategy.checkAlert(systolicStack.pop(), null);
+        }
+        while (!diastolicStack.isEmpty()) {
+            diastolicStrategy.checkAlert(diastolicStack.pop(), null);
+        }
+        while (!ecgStack.isEmpty()){
+            ecgStrategy.checkAlert(ecgStack.pop(), null);
         }
     }
+
+
 
 
 

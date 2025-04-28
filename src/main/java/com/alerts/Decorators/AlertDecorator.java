@@ -2,6 +2,9 @@ package com.alerts.Decorators;
 
 import com.alerts.Alert;
 
+/**
+ * basic Decorator class for the alert interface
+ */
 public class AlertDecorator implements Alert {
     Alert alert;
     public AlertDecorator(Alert alert) {
@@ -22,9 +25,14 @@ public class AlertDecorator implements Alert {
     public long getTimestamp() {
         return alert.getTimestamp();
     }
+
     @Override
-    public String toString(){
+    public String toString() {
         return alert.toString();
+    }
+    @Override
+    public void print(){
+        alert.print();
     }
 }
 

@@ -12,5 +12,9 @@ public class PriorityAlertDecorator extends AlertDecorator{
     public String toString() {
         return "PRIORITY Alert: [" + alert.toString() + "]";
     }
+    @Override
+    public void print(){
+        System.out.println(this.toString());
+    }
 }
 

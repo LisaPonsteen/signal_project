@@ -4,7 +4,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 public interface AlertStrategy {
-    public boolean checkAlert(double value, long time);
+    public boolean checkAlert(double value, Long time);
 }
 
 class CombinedAlertStrategy implements AlertStrategy {
@@ -19,7 +19,7 @@ class CombinedAlertStrategy implements AlertStrategy {
     }
 
     @Override
-    public boolean checkAlert(double value, long time) {
+    public boolean checkAlert(double value, Long time) {
         if (lastSystolicPressure < 90 && lastSaturation < 92) {
             return true;
             //triggerAlert(new Alert(String.valueOf(patientId), "hypotensiveHypoxemia", lastTime));
@@ -45,12 +45,17 @@ class SystolicBloodPressureStrategy implements AlertStrategy {
     private final int trendThreshold = 10;
     int upperThreshold;
     int lowerThreshold;
+    int repetitionsForTrend = 3;
     public SystolicBloodPressureStrategy() {
         upperThreshold = 180;
         lowerThreshold = 90;
     }
+
+    public int getRepetitionsForTrend(){
+        return repetitionsForTrend;
+    }
     @Override
-    public boolean checkAlert(double value, long time) {
+    public boolean checkAlert(double value, Long time) {
         if (firstRecord) {
             firstRecord = false;
         } else if (value - lastPressure > trendThreshold) {
@@ -73,7 +78,7 @@ class SystolicBloodPressureStrategy implements AlertStrategy {
             trend = 0;
         }
         lastPressure = value;
-        if (trend >= 3) {
+        if (trend >= repetitionsForTrend) {
             //triggerAlert(new Alert(String.valueOf(patientId), "trend", lastTime));
             return true;
         }
@@ -91,8 +96,12 @@ class ECGStrategy implements AlertStrategy {
     private final int ecgPeakThreshold = 30;
     private double averageECG = 0;
 
+    public int getECGSize() {
+        return ECGSize;
+    }
+
     @Override
-    public boolean checkAlert(double value, long time) {
+    public boolean checkAlert(double value, Long time) {
         if (ECGSize == lastECGs.size()) {
             //update average and dequeue
             averageECG += value/ECGSize;
@@ -109,13 +118,25 @@ class ECGStrategy implements AlertStrategy {
 }
 
 class SaturationStrategy implements AlertStrategy {
-    private Queue<Double> lastSaturations = new LinkedList<>();
-    private Queue<Long> lastTimes = new LinkedList<>();
+    private Queue<Double> lastSaturations;
+    private Queue<Long> lastTimes;
     private long lastTime;
     private long timeWindow = 600000; //10 minutes. assuming time is in miliseconds, since that is in discription of the generator
 
+    public long getWindowSize() {
+        return timeWindow;
+    }
+
+    //Stack<Long> lastTimes, Stack<Double>lastSaturations, long lastTime
+    public SaturationStrategy() {
+        this.lastSaturations = new LinkedList<>();
+        this.lastTimes = new LinkedList<>();
+        this.lastTime = lastTime;
+
+    }
+
     @Override
-    public boolean checkAlert(double value, long time) {
+    public boolean checkAlert(double value, Long time) {
         lastSaturations.offer(value);
         lastTimes.offer(lastTime);
 

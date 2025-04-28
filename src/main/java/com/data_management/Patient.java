@@ -12,6 +12,14 @@ import java.util.List;
 public class Patient {
     private int patientId;
     private List<PatientRecord> patientRecords;
+    private long scannedUpTo;
+
+    public long getScannedUpTo() {
+        return scannedUpTo;
+    }
+    public void setScannedUpTo(long scannedUpTo) {
+        this.scannedUpTo = scannedUpTo;
+    }
 
     /**
      * Constructs a new Patient with a specified ID.

@@ -72,6 +72,15 @@ public class DataStorage {
         return new ArrayList<>(); // return an empty list if no patient is found
     }
 
+    public long getPatientScannedTime(int patientId) {
+        return patientMap.get(patientId).getScannedUpTo();
+    }
+
+    public void setPatientScannedTime(int patientId, long time) {
+        patientMap.get(patientId).setScannedUpTo(time);
+    }
+
+
     /**
      * Retrieves a collection of all patients stored in the data storage.
      *

@@ -22,14 +22,14 @@ class BloodOxygenAlertFactory extends AlertFactory{
 class ECGAlertFactory extends AlertFactory{
     @Override
     public Alert createAlert(String patientId, String condition, long timestamp) {
-        return new BasisAlert(patientId, "ECGAlert: " + condition, timestamp);
+        return new BasisAlert(patientId, "ECGAlert -> " + condition, timestamp);
     }
 }
 
 class CombinedAlertFactory extends AlertFactory{
     @Override
     public Alert createAlert(String patientId, String condition, long timestamp) {
-        return new BasisAlert(patientId, "CombinedAlert: " + condition, timestamp);
+        return new BasisAlert(patientId, "CombinedAlert -> " + condition, timestamp);
     }
 }
 
