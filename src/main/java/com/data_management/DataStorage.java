@@ -72,6 +72,19 @@ public class DataStorage {
         return new ArrayList<>(); // return an empty list if no patient is found
     }
 
+    public PatientRecord getLastRecordOfType(int patientId, String recordType) {
+        Patient patient = patientMap.get(patientId);
+        if (patient != null) {
+            List<PatientRecord> records = patient.getRecords(Long.MIN_VALUE, Long.MAX_VALUE);
+            for (int i = records.size()-1; i > 0; i--) {
+                if (records.get(i).getRecordType().equals(recordType)) {
+                    return records.get(i);
+                }
+            }
+        }
+        return null;
+    }
+
     public long getPatientScannedTime(int patientId) {
         return patientMap.get(patientId).getScannedUpTo();
     }

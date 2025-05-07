@@ -33,6 +33,24 @@ public class Patient {
     }
 
     /**
+     * checks if the newRecord has a duplicate regarding timestamp and record type.
+     * if so, it removes the duplicate record and adds the new one (so updates the measurement value)
+     * @param newRecord the new record
+     * @return returns true if a record is updated
+     */
+    public boolean checkDuplicate(PatientRecord newRecord) {
+        int i = findTimeIndex(newRecord.getTimestamp(), 0, patientRecords.size()-1, true); //get the first index with the specific timestamp
+        while (i<patientRecords.size() && patientRecords.get(i).getTimestamp() == newRecord.getTimestamp()) {
+            if (patientRecords.get(i).getRecordType() == newRecord.getRecordType()) {
+                patientRecords.remove(i);
+                patientRecords.add(i, newRecord);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Adds a new record to this patient's list of medical records.
      * The record is created with the specified measurement value, record type, and
      * timestamp.
@@ -47,15 +65,22 @@ public class Patient {
         PatientRecord record = new PatientRecord(this.patientId, measurementValue, recordType, timestamp);
         if (patientRecords.isEmpty()) {
             patientRecords.add(record);
-        } else if (patientRecords.get(patientRecords.size()-1).getTimestamp() <= record.getTimestamp()) { //often, the record will be at the same time or later than the last record, then it can just be added
+            return;
+        }
+
+        //check if there are records with the same timestamp and record type. if so, edit their measurement value
+        if (checkDuplicate(record))
+            return;
+        //else add record to patientRecords (at right index)
+
+        //if the timestamp is later than the last record, then it can be added to the end of the list
+        if (patientRecords.get(patientRecords.size()-1).getTimestamp() < record.getTimestamp()) {
             this.patientRecords.add(record);
         } else {
-            //if not, insert the record at the correct index using findTimeIndex
-            //System.out.println("adding");
+            //else insert the record at the correct index by using findTimeIndex
             patientRecords.add(findTimeIndex(record.getTimestamp(), 0, patientRecords.size()-1, false), record);
         }
     }
-
 
 
     /**
@@ -64,39 +89,11 @@ public class Patient {
      * uses a binary search approach
      *
      * @param timestamp target time to search for
-     * @param min   minimal index it could be at (often 0)
-     * @param max   maximal index it could be at (often size of list)
+     * @param minIndex   minimal index it could be at (often 0)
+     * @param maxIndex   maximal index it could be at (often size of list)
      * @param firstIndex    determines whether to give the first index with the timestamp or the last if multiple
      * @return  index at which the time is equal to the target time(or the smallest alternative)
      */
-    /**private int findTimeIndex (long timestamp, int min, int max, boolean firstIndex) {
-
-        int middle = min;
-        boolean found=false;
-        while (max >= min && !found) {
-            middle = (max-min)/2;
-            long middleValue = patientRecords.get(middle).getTimestamp();
-            if (middleValue > timestamp) {
-                max = middle -1;
-            } else if (middleValue < timestamp) {
-                min = middle+1;
-            } else { //if its an exact match
-                found = true;
-            }
-        }
-        if (firstIndex) {
-            while (patientRecords.get(middle).getTimestamp() >= timestamp) {
-                middle--;
-            }
-            return middle+1;
-        } else {
-            while (patientRecords.get(middle).getTimestamp() < timestamp) {
-                middle++;
-            }
-            return middle-1;
-        }
-    }
-     **/
     private int findTimeIndex(long timestamp, int minIndex, int maxIndex, boolean firstIndex) {
         int mid = 0;
         int min = minIndex;
@@ -155,8 +152,8 @@ public class Patient {
      */
     public List<PatientRecord> getRecords(long startTime, long endTime) {
         List<PatientRecord> records = new ArrayList<>();
-        int startIndex = findTimeIndex(startTime, 0, patientRecords.size()-1, true);
-        int endIndex = findTimeIndex(endTime, startIndex, patientRecords.size()-1, false);
+        int startIndex = findTimeIndex(startTime, 0, patientRecords.size()-1, true); //get the first index with the specific timestamp
+        int endIndex = findTimeIndex(endTime, startIndex, patientRecords.size()-1, false); //get the last index with the specific timestamp
         for (int i = startIndex; i <= endIndex; i++) {
             records.add(patientRecords.get(i));
         }

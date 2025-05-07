@@ -30,10 +30,6 @@ public class AlertDecorator implements Alert {
     public String toString() {
         return alert.toString();
     }
-    @Override
-    public void print(){
-        alert.print();
-    }
 }
 
 
