@@ -18,6 +18,7 @@ public class SystolicBloodPressureStrategy implements AlertStrategy {
     public int getRepetitionsForTrend(){
         return repetitionsForTrend;
     }
+
     @Override
     public boolean checkAlert(double value, Long time) {
         if (firstRecord) {
@@ -42,14 +43,10 @@ public class SystolicBloodPressureStrategy implements AlertStrategy {
             trend = 0;
         }
         lastPressure = value;
-        if (trend >= repetitionsForTrend) {
-            //triggerAlert(new Alert(String.valueOf(patientId), "trend", lastTime));
+        if (trend >= repetitionsForTrend)
             return true;
-        }
-        if (value > upperThreshold || value < lowerThreshold) {
+        if (value > upperThreshold || value < lowerThreshold)
             return true;
-            //triggerAlert(new Alert(String.valueOf(patientId), "CriticalThreshold", lastTime));
-        }
         return false;
     }
 }

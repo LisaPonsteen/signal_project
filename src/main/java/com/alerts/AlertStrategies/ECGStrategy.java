@@ -22,9 +22,8 @@ public class ECGStrategy implements AlertStrategy {
             if (Math.abs(value - averageECG) > ecgPeakThreshold) {
                 lastECGs.offer(value); //enqueue
                 return true;
-                //triggerAlert(new Alert(String.valueOf(patientId), "Abnormal ECG Data", lastTime));
             }
-        } //I assume we don't have to check things before the window gets full
+        } //I assume we don't have to do checks if the window isnt full yet
         lastECGs.offer(value); //enqueue
         return false;
     }

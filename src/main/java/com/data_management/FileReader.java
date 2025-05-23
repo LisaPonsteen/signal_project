@@ -1,8 +1,5 @@
 package com.data_management;
 
-import com.alerts.AlertGenerator;
-import com.alerts.Alert;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Scanner;
@@ -20,9 +17,6 @@ public class FileReader implements DataReader {
      * @throws IOException if there is an error reading the data
      */
     public void readData(DataStorage dataStorage) throws IOException {
-        //parse data from the specified directory.
-        //Ensure that the data read is accurately passed into the DataStorage for further processing.
-
         File dir = new File(outputDir);
         File[] files = dir.listFiles();
 
@@ -35,8 +29,8 @@ public class FileReader implements DataReader {
             Scanner scanner = new Scanner(file);
 
             while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                DataParser.parseLine(line, dataStorage);
+                String line = scanner.nextLine(); //extract line with data from file
+                DataParser.parseLine(line, dataStorage); //give it to data parser, that will put it into data storage
             }
             scanner.close();
         }

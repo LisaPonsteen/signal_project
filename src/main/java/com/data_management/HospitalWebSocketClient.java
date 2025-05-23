@@ -1,7 +1,6 @@
 package com.data_management;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 
 import org.java_websocket.client.WebSocketClient;
@@ -33,7 +32,7 @@ public class HospitalWebSocketClient extends WebSocketClient {
      */
     @Override
     public void onMessage(String message) {
-        //System.out.println("received message: " + message);
+        System.out.println("received message: " + message);
         DataParser.parseLine(message, dataStorage);
     }
 

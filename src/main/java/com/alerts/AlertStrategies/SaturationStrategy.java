@@ -33,11 +33,9 @@ public class SaturationStrategy implements AlertStrategy {
         }
         if (value < 92) {
             return true;
-            //triggerAlert(new Alert(String.valueOf(patientId), "Low Saturation", lastTime));
         }
         if (lastSaturations.peek() - value > 5) {
             return true;
-            //triggerAlert(new Alert(String.valueOf(patientId), "Rapid Drop", lastTime));
         }
         return false;
     }

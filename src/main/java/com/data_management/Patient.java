@@ -41,11 +41,12 @@ public class Patient {
     public boolean checkDuplicate(PatientRecord newRecord) {
         int i = findTimeIndex(newRecord.getTimestamp(), 0, patientRecords.size()-1, true); //get the first index with the specific timestamp
         while (i<patientRecords.size() && patientRecords.get(i).getTimestamp() == newRecord.getTimestamp()) {
-            if (patientRecords.get(i).getRecordType() == newRecord.getRecordType()) {
+            if (patientRecords.get(i).getRecordType().equals(newRecord.getRecordType())) {
                 patientRecords.remove(i);
                 patientRecords.add(i, newRecord);
                 return true;
             }
+            i++;
         }
         return false;
     }
@@ -95,7 +96,7 @@ public class Patient {
      * @return  index at which the time is equal to the target time(or the smallest alternative)
      */
     private int findTimeIndex(long timestamp, int minIndex, int maxIndex, boolean firstIndex) {
-        int mid = 0;
+        int mid;
         int min = minIndex;
         int max = maxIndex;
         boolean found = false;
@@ -115,6 +116,7 @@ public class Patient {
             }
         }
 
+        //if an index is found with target timestamp, check to find the first/last index with that target time
         if (found) {
             while (0 <= foundIndex && foundIndex <=maxIndex && patientRecords.get(foundIndex).getTimestamp() == timestamp) {
                 if (firstIndex) {
@@ -131,7 +133,7 @@ public class Patient {
         }
 
         // if no exact match found, return the smallest index > timestamp (for firstIndex)
-        //the while loop stopped when min>max.
+        //(because the while loop stopped when min>max)
         if (firstIndex) {
             return Math.max(0,max);
         }

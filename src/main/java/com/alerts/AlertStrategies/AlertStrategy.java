@@ -1,10 +1,11 @@
 package com.alerts.AlertStrategies;
 
-import java.util.LinkedList;
-import java.util.Queue;
-
+/**
+ * interface for alert strategies.
+ * instances have a method checkAlert() that returns true if an alert should be triggered and false if not
+ */
 public interface AlertStrategy {
-    public boolean checkAlert(double value, Long time);
+    boolean checkAlert(double value, Long time);
 }
 
 
