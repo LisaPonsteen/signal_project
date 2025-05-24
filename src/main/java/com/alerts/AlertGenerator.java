@@ -19,12 +19,33 @@ import java.util.concurrent.TimeUnit;
  * and generating alerts when certain predefined conditions are met. This class
  * relies on a {@link DataStorage} instance to access patient data and evaluate
  * it against specific health criteria.
+ *
+ * note
+ * I considered two approaches for using and getting the data needed for the alert strategies:
+ * 1. having and storing {@code AlertStrategy} instances per patient, each strategy storing the data it needs
+ * (e.g., recent ECG data), or alternatively storing this data as separate instance fields at the Patient object.
+ *
+ * 2. Only having a single shared instance of each strategy and preparing it with the necessary data
+ * before evaluating a patient. In this approach, every time {@code evaluateData()} is called,
+ * the patient's old records are scanned to get the required data (using {@code prepStrategies()}).
+ *
+ * I chose option 2 because then I don't have to add any extra instance fields to the patient object
+ * (alertStrategy instance or record data like ecg windows).
+ * To make this easier I added the field {@code scannedUpTo} to {@code Patient}
+ * (says which records are evaluated and which aren't)
+ * and {@code getLastRecordOfType()} to {@code DataStorage} (gets the most recent record of a given type)
+ *
+ * However, if the system must evaluate incoming data almost immediately, evaluate will get called
+ * many times for just a few new records, which leads to repeatedly scanning old records which is inefficient.
+ * In that case, keeping either strategy instances or required data directly in the {@code Patient}
+ * object would be better.
  */
+
 public class AlertGenerator {
     private final DataStorage dataStorage;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
-    //Define and make instance of all strategies
+    //Define and make an instance of all strategies
     private final AlertStrategy ecgStrategy = new ECGStrategy();
     private final AlertStrategy saturationStrategy = new SaturationStrategy();
     private final CombinedAlertStrategy combinedStrategy = new CombinedAlertStrategy();
@@ -45,15 +66,16 @@ public class AlertGenerator {
     );
 
     //assign a factory to every alert strategy
-    private final Map<AlertStrategy, AlertFactory> factories = Map.of(systolicStrategy, new BloodPressureAlertFactory(),
-            diastolicStrategy, new BloodPressureAlertFactory(), ecgStrategy, new ECGAlertFactory(), saturationStrategy, new BloodOxygenAlertFactory(),
+    private final Map<AlertStrategy, AlertFactory> factories = Map.of(systolicStrategy,
+            new BloodPressureAlertFactory(), diastolicStrategy, new BloodPressureAlertFactory(),
+            ecgStrategy, new ECGAlertFactory(), saturationStrategy, new BloodOxygenAlertFactory(),
             combinedStrategy, new CombinedAlertFactory(), triggeredStrategy, new AlertFactory());
 
-    //define for which strategies an alertDecorator should be used
+    //list for which strategies an alertDecorator should be used
     private final List<AlertStrategy> priorityStrategies;
     private final List<AlertStrategy> repeatedStrategies;
 
-    //constants for the AlertStrategies
+    //constants for prepping AlertStrategies
     private final int repetitionsForTrend = ((SystolicBloodPressureStrategy) systolicStrategy).getRepetitionsForTrend();
     private final int EcgWindowSize = ((ECGStrategy) ecgStrategy).getECGSize();
     private final long saturationWindowSize = ((SaturationStrategy) saturationStrategy).getWindowSize();
@@ -144,9 +166,11 @@ public class AlertGenerator {
 
 
     /**
-     * Method that passes relevant old, already checked, data to the alert strategies, so they can see the old trends if needed
+     * Method that passes relevant old, already checked, data to the alert strategies,
+     * so they can see the old trends if needed.
      * It does so without having to iterate through all existing records
-     * This method should be run once before evaluating unchecked records for a patient, to make sure it also gives trend alerts etc. for the first unchecked records
+     * This method should be run once before evaluating unchecked records for a patient
+     * to get data needed for e.g. trend alerts
      *
      * @param evaluatedRecords list of already evaluated records
      */
@@ -197,17 +221,6 @@ public class AlertGenerator {
         while (!ecgStack.isEmpty()){
             ecgStrategy.checkAlert(ecgStack.pop(), null);
         }
-    }
-
-    /**
-     * Puts a task into a scheduler, so it will get done repeatedly at their intended time
-     *
-     * @param task  Task that has to be executed
-     * @param period    Period after which the task has to be executed again
-     * @param timeUnit  The time unit of the period
-     */
-    private void scheduleTask(Runnable task, long period, TimeUnit timeUnit) {
-        scheduler.scheduleAtFixedRate(task, 3, period, timeUnit);
     }
 
     /**

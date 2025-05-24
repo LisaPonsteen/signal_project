@@ -11,7 +11,7 @@ import java.util.List;
 class DataStorageTest {
 
     /**
-     * Test the dataStorage. see if data is added and updated correctly
+     * Test the {@code DataStorage}. sees if data is added and updated correctly
      */
     @Test
     void testAddPatientData() {
@@ -49,7 +49,6 @@ class DataStorageTest {
         storage.addPatientData(1, 100.0, "WhiteBloodCells", 1714376789050L); //first white bloodcells
 
         Thread.sleep(1000);
-        List<PatientRecord> records = storage.getRecords(1, 1714376789049L, 1714376789059L);
 
         PatientRecord record = storage.getLastRecordOfType(1, "WhiteBloodCells"); //should return the last (on timestamp) record of whitebloodcell
         assertEquals(200.0, record.getMeasurementValue());

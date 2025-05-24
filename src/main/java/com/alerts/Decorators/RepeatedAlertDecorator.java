@@ -4,7 +4,9 @@ import com.alerts.Alert;
 import com.alerts.AlertStrategies.*;
 
 /**
- * a decorator for alert objects. It repeats alerts by checking and re-checking alert conditions over a set interval
+ * A decorator for alert objects that should be repeated by re-checking alert conditions
+ * Each instance holds a reference to the original alert and the {@code AlertStrategy}
+ *  and {@code recordType} that made the alert, so it can easily be re-checked
  */
 public class RepeatedAlertDecorator extends AlertDecorator {
     Alert alert;
@@ -15,6 +17,7 @@ public class RepeatedAlertDecorator extends AlertDecorator {
         this.alertStrategy = alertStrategy;
         this.recordType = recordType;
     }
+
     @Override
     public String toString() {
         return "REPEATED Alert: [" + super.toString() + " ]";

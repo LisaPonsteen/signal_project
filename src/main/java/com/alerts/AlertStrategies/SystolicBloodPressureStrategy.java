@@ -7,9 +7,10 @@ public class SystolicBloodPressureStrategy implements AlertStrategy {
     private boolean firstRecord = true;
     private double lastPressure;
     private final int trendThreshold = 10;
+    private final int repetitionsForTrend = 3;
+
     int upperThreshold;
     int lowerThreshold;
-    int repetitionsForTrend = 3;
     public SystolicBloodPressureStrategy() {
         upperThreshold = 180;
         lowerThreshold = 90;

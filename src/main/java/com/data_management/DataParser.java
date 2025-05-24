@@ -1,14 +1,15 @@
 package com.data_management;
 
 /**
- * class responsible for parsing a line into a record and adding it to a data storage.
+ * this class is responsible for parsing a line into a record before adding it to the data storage.
  * It can be used by any DataReader.
  */
 public class DataParser {
 
     /**
      * Parses a lines with a patient record to variable values, and puts it into data storage
-     * Assumes that lines look like: Patient ID: 123, Timestamp: 1713345600000, Label: Saturation, Data: 78
+     * Assumes that lines look like:
+     * Patient ID: 123, Timestamp: 1713345600000, Label: Saturation, Data: 78
      *
      * @param line  a line from the file
      * @param dataStorage   data storage where the data should be added to
@@ -33,8 +34,6 @@ public class DataParser {
         for (char nextChar: line.toCharArray()) {
             if (nextChar == ':') {
                 readValue = true;
-                //System.out.println(label);
-
             } else if (nextChar == ',') { //at the end of every label-value pair, update the corresponding variable
                 if (label.toString().equals("PatientID")) {
                     try {
@@ -53,7 +52,6 @@ public class DataParser {
                 else if (label.toString().equals("Data")) {
 
                     //if the type is an alert: if it is triggered, we will put measurementValue = 0.0. If resolved, the alert won't be pushed
-
                     if (value.toString().equals("triggered")) {
                             measurementValue = 0.0;
                     } else if (value.toString().equals("resolved")) {
@@ -80,18 +78,29 @@ public class DataParser {
         //System.out.println("ended parsing");
 
         //check if any of the variables isn't correctly set. If everything is valid, make a new record and add it to dataStorage
-        if (recordType == null)
-            System.out.println("did not parse record type correctly: " + label);
-        else if ((Double.isNaN(measurementValue) && !recordType.equals("alert")))
-            System.out.println("did not parse measurement value correctly: " +recordType+ " = " + measurementValue);
-        else if (patientId <= 0)
-            System.out.println("did not parse patient ID correctly: " + patientId);
-        else if (timestamp <= 0)
-            System.out.println("did not parse timestamp correctly: " + timestamp);
-        else {
+
+        if (checkValidity(recordType, measurementValue, patientId, timestamp, dataStorage)) {
             //System.out.println("adding to data storage: patient ID: " + patientId + " measurement value: " + measurementValue+ " record type: " + recordType + " timestamp: " + timestamp);
             dataStorage.addPatientData(patientId, measurementValue, recordType, timestamp);
             //System.out.println("added to data storage");
+        } else {
+            System.out.println(" Line - " + line);
         }
+    }
+    private static boolean checkValidity(String recordType, double measurementValue, int patientId, long timestamp, DataStorage dataStorage) {
+        if (recordType == null) {
+            System.out.print("did not parse record type correctly.");
+            return false;
+        }else if ((Double.isNaN(measurementValue) && !recordType.equals("alert"))) {
+            System.out.print("did not parse measurement value correctly.");
+            return false;
+        }else if (patientId <= 0) {
+            System.out.print("did not parse patient ID correctly.");
+            return false;
+        }else if (timestamp <= 0) {
+            System.out.print("did not parse timestamp correctly.");
+            return false;
+        }
+        return true;
     }
 }

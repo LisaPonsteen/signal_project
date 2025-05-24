@@ -14,7 +14,7 @@ import java.util.List;
 public class FileReaderTest {
 
     /**
-     * tests the file reader class and the integration between filereader and datastorage
+     * tests the file reader class and the integration between {@code FileReader} and {@code DataStorage}
      * @throws IOException if writing in/making files and directories goes wrong
      */
     @Test
@@ -67,7 +67,7 @@ public class FileReaderTest {
         DataStorage storage = DataStorage.getInstance();
 
         File dir = new File(outputDir);
-        File testData1 = new File(outputDir + "/data1.txt");
+        File testData1 = new File(outputDir + "/data2.txt");
 
         if (!dir.exists()) {
             if (!dir.mkdir()) {
